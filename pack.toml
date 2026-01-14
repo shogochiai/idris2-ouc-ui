@@ -1,0 +1,16 @@
+# OucDashboard pack.toml
+# idris2-dom-mvc project configuration
+
+[custom.all.oucdashboard]
+type   = "local"
+path   = "."
+ipkg   = "oucdashboard.ipkg"
+
+[custom.all.oucdashboard-tests]
+type   = "local"
+path   = "."
+ipkg   = "oucdashboard-tests.ipkg"
+
+[install]
+libs = ["oucdashboard"]
+apps = ["oucdashboard", "oucdashboard-tests"]

@@ -1,0 +1,17 @@
+package oucdashboard-tests
+
+version = 0.1.0
+sourcedir = "src"
+
+depends = base, contrib, dom-mvc
+
+-- Node.js for running tests (includes View type checking)
+opts = "--cg node"
+
+modules = OucDashboard.Model
+        , OucDashboard.Update
+        , OucDashboard.View
+        , OucDashboard.Tests.AllTests
+
+main = OucDashboard.Tests.AllTests
+executable = oucdashboard-tests

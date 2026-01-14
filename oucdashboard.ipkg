@@ -1,0 +1,18 @@
+package oucdashboard
+
+version = 0.1.0
+sourcedir = "src"
+
+depends = base, contrib, dom-mvc
+
+-- Build options for web coverage (source map generation)
+opts = "--cg javascript --directive sourcemap"
+
+modules = OucDashboard.Main
+        , OucDashboard.Model
+        , OucDashboard.Update
+        , OucDashboard.View
+        , OucDashboard.Tests.AllTests
+
+main = OucDashboard.Main
+executable = oucdashboard

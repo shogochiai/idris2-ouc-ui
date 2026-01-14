@@ -1,0 +1,23 @@
+BRANCH:ask-session
+HEAD:
+GapDetected(REQ_FETCH_AUDITORS, stparity)|signal-record|0
+GapDetected(REQ_FETCH_OUS, stparity)|signal-record|0
+GapDetected(REQ_FETCH_PROPOSALS, stparity)|signal-record|0
+GapDetected(REQ_FETCH_EVENTS, stparity)|signal-record|0
+GapDetected(REQ_VIEW_AUDITOR_LIST, stparity)|signal-record|0
+GapDetected(REQ_VIEW_OU_STATUS, stparity)|signal-record|0
+GapDetected(REQ_VIEW_PROPOSAL_LIST, stparity)|signal-record|0
+GapDetected(REQ_VIEW_EVENT_LOG, stparity)|signal-record|0
+GapDetected(REQ_VIEW_LOADING, stparity)|signal-record|0
+GapDetected(REQ_VIEW_ERROR, stparity)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(REQ_FETCH_AUDITORS, stparity)|signal-record|0
+GapDetected(REQ_FETCH_OUS, stparity)|signal-record|0
+GapDetected(REQ_FETCH_PROPOSALS, stparity)|signal-record|0
+GapDetected(REQ_FETCH_EVENTS, stparity)|signal-record|0
+GapDetected(REQ_VIEW_AUDITOR_LIST, stparity)|signal-record|0
+GapDetected(REQ_VIEW_OU_STATUS, stparity)|signal-record|0
+GapDetected(REQ_VIEW_PROPOSAL_LIST, stparity)|signal-record|0
+GapDetected(REQ_VIEW_EVENT_LOG, stparity)|signal-record|0
+GapDetected(REQ_VIEW_LOADING, stparity)|signal-record|0
+GapDetected(REQ_VIEW_ERROR, stparity)|signal-record|0

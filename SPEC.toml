@@ -1,0 +1,160 @@
+# OucDashboard SPEC.toml
+# OUC Dashboard UI - idris2-dom-mvc
+
+[meta]
+version = "0.1.0"
+description = "Dashboard UI for OUC (Observable Unit Canister) monitoring"
+
+# =============================================================================
+# Model Requirements - Data Types
+# =============================================================================
+
+[[spec]]
+id = "REQ_MODEL_INIT"
+description = "Initial model has empty lists and Idle state"
+priority = "must"
+tags = ["model", "init"]
+
+[[spec]]
+id = "REQ_MODEL_AUDITOR"
+description = "Auditor type has id, name, and assigned OU list"
+priority = "must"
+tags = ["model", "types"]
+
+[[spec]]
+id = "REQ_MODEL_OU"
+description = "OU type has address, chain, status, and last sync time"
+priority = "must"
+tags = ["model", "types"]
+
+[[spec]]
+id = "REQ_MODEL_PROPOSAL"
+description = "Proposal type has id, description, votes for/against, and status"
+priority = "must"
+tags = ["model", "types"]
+
+[[spec]]
+id = "REQ_MODEL_EVENT"
+description = "Event type has timestamp, event type, chain, and details"
+priority = "must"
+tags = ["model", "types"]
+
+# =============================================================================
+# API Fetch Requirements
+# =============================================================================
+
+[[spec]]
+id = "REQ_FETCH_AUDITORS"
+description = "Fetch auditors from /api/auditors endpoint"
+priority = "must"
+tags = ["api", "fetch"]
+
+[[spec]]
+id = "REQ_FETCH_OUS"
+description = "Fetch OUs from /api/ous endpoint"
+priority = "must"
+tags = ["api", "fetch"]
+
+[[spec]]
+id = "REQ_FETCH_PROPOSALS"
+description = "Fetch proposals from /api/proposals endpoint"
+priority = "must"
+tags = ["api", "fetch"]
+
+[[spec]]
+id = "REQ_FETCH_EVENTS"
+description = "Fetch events from /api/events endpoint"
+priority = "must"
+tags = ["api", "fetch"]
+
+# =============================================================================
+# View Requirements - Display
+# =============================================================================
+
+[[spec]]
+id = "REQ_VIEW_AUDITOR_LIST"
+description = "Display auditor list with names and assigned OUs"
+priority = "must"
+tags = ["view", "display"]
+
+[[spec]]
+id = "REQ_VIEW_OU_STATUS"
+description = "Display OU status cards showing chain, address, and sync status"
+priority = "must"
+tags = ["view", "display"]
+
+[[spec]]
+id = "REQ_VIEW_PROPOSAL_LIST"
+description = "Display proposal list with vote counts and status badges"
+priority = "must"
+tags = ["view", "display"]
+
+[[spec]]
+id = "REQ_VIEW_EVENT_LOG"
+description = "Display event log with timestamps and event details"
+priority = "must"
+tags = ["view", "display"]
+
+[[spec]]
+id = "REQ_VIEW_LOADING"
+description = "Display loading indicator while fetching data"
+priority = "must"
+tags = ["view", "state"]
+
+[[spec]]
+id = "REQ_VIEW_ERROR"
+description = "Display error message when API call fails"
+priority = "must"
+tags = ["view", "state"]
+
+# =============================================================================
+# Update Requirements - State Transitions
+# =============================================================================
+
+[[spec]]
+id = "REQ_UPDATE_INIT"
+description = "Init message sets Loading state"
+priority = "must"
+tags = ["update", "lifecycle"]
+
+[[spec]]
+id = "REQ_UPDATE_REFRESH"
+description = "Refresh message re-fetches all data from API"
+priority = "should"
+tags = ["update", "lifecycle"]
+
+[[spec]]
+id = "REQ_UPDATE_TAB_SWITCH"
+description = "Tab switch changes active view (Auditors/OUs/Proposals/Events)"
+priority = "should"
+tags = ["update", "navigation"]
+
+[[spec]]
+id = "REQ_UPDATE_GOT_AUDITORS"
+description = "GotAuditors updates model with fetched auditor list"
+priority = "must"
+tags = ["update", "api"]
+
+[[spec]]
+id = "REQ_UPDATE_GOT_OUS"
+description = "GotOUs updates model with fetched OU list"
+priority = "must"
+tags = ["update", "api"]
+
+[[spec]]
+id = "REQ_UPDATE_GOT_PROPOSALS"
+description = "GotProposals updates model with fetched proposal list"
+priority = "must"
+tags = ["update", "api"]
+
+[[spec]]
+id = "REQ_UPDATE_GOT_EVENTS"
+description = "GotEvents updates model with fetched event list"
+priority = "must"
+tags = ["update", "api"]
+
+[[spec]]
+id = "REQ_UPDATE_API_ERROR"
+description = "ApiError sets error state with message"
+priority = "must"
+tags = ["update", "error"]
