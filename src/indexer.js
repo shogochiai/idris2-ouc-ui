@@ -92,6 +92,48 @@ export async function fetchOucStatus() {
 }
 
 // =============================================================================
+// Tier Management APIs (write operations via Indexer → OUC)
+// =============================================================================
+
+// Request tier change (Indexer forwards to OUC canister)
+export async function changeTier(newTier) {
+  const url = `${getBaseUrl()}/subscription/tier`;
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tier: newTier })
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (err) {
+    console.error("Tier change error:", err);
+    throw err;
+  }
+}
+
+// Toggle auto-renew setting
+export async function setAutoRenew(enabled) {
+  const url = `${getBaseUrl()}/subscription/auto-renew`;
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ autoRenew: enabled })
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (err) {
+    console.error("Auto-renew toggle error:", err);
+    throw err;
+  }
+}
+
+// =============================================================================
 // Aggregated fetch for dashboard initialization
 // =============================================================================
 
@@ -129,6 +171,8 @@ if (typeof window !== 'undefined') {
     fetchSubscription,
     fetchTreasury,
     fetchOucStatus,
-    fetchDashboardData
+    fetchDashboardData,
+    changeTier,
+    setAutoRenew
   };
 }

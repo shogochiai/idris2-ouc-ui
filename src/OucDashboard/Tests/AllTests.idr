@@ -641,7 +641,11 @@ test_BRANCH_Update_AllMsgs = do
       _ = update LoginFailure m0
       _ = update LogoutRequest m0
       _ = update LogoutComplete m0
-  putStrLn "  PASS: BRANCH_Update_AllMsgs (21 branches)"
+      -- Tier change messages
+      _ = update (RequestTierChange Archive) m0
+      _ = update (TierChangeSuccess Standard) m0
+      _ = update (TierChangeFailure "error") m0
+  putStrLn "  PASS: BRANCH_Update_AllMsgs (24 branches)"
   pure True
 
 -- | Test == operators with more cross-constructor comparisons
@@ -742,6 +746,43 @@ test_BRANCH_AuthState_Eq = do
   r5 <- assertTrue "NotAuthenticated /== Authenticating" (not (NotAuthenticated == Authenticating))
   r6 <- assertTrue "Authenticating /== Authenticated x" (not (Authenticating == Authenticated "x"))
   pure (r1 && r2 && r3 && r4 && r5 && r6)
+
+-- =============================================================================
+-- Tier Change Tests
+-- =============================================================================
+
+-- | SPEC: REQ_UPDATE_REQUEST_TIER_CHANGE - RequestTierChange sets Loading state
+test_REQ_UPDATE_REQUEST_TIER_CHANGE : IO Bool
+test_REQ_UPDATE_REQUEST_TIER_CHANGE = do
+  let m = update (RequestTierChange RealTime) initialModel
+  assertEq "RequestTierChange sets Loading" Loading m.loadState
+
+-- | SPEC: REQ_UPDATE_TIER_CHANGE_SUCCESS - TierChangeSuccess updates subscription
+test_REQ_UPDATE_TIER_CHANGE_SUCCESS : IO Bool
+test_REQ_UPDATE_TIER_CHANGE_SUCCESS = do
+  let sub = MkSubscription Economy "2025-02-14" True
+      m0 = { subscription := Just sub } initialModel
+      m = update (TierChangeSuccess RealTime) m0
+  case m.subscription of
+    Nothing => do putStrLn "  FAIL: subscription is Nothing"; pure False
+    Just s => do
+      r1 <- assertEq "tier changed to RealTime" RealTime s.currentTier
+      r2 <- assertEq "loadState is Loaded" Loaded m.loadState
+      pure (r1 && r2)
+
+-- | SPEC: REQ_UPDATE_TIER_CHANGE_FAILURE - TierChangeFailure sets error state
+test_REQ_UPDATE_TIER_CHANGE_FAILURE : IO Bool
+test_REQ_UPDATE_TIER_CHANGE_FAILURE = do
+  let m = update (TierChangeFailure "Insufficient balance") initialModel
+  assertEq "error state" (Failed "Insufficient balance") m.loadState
+
+-- | Test tier change with no existing subscription
+test_TIER_CHANGE_NO_SUBSCRIPTION : IO Bool
+test_TIER_CHANGE_NO_SUBSCRIPTION = do
+  let m = update (TierChangeSuccess Standard) initialModel
+  r1 <- assertTrue "subscription still Nothing" (case m.subscription of Nothing => True; Just _ => False)
+  r2 <- assertEq "loadState is Loaded" Loaded m.loadState
+  pure (r1 && r2)
 
 -- =============================================================================
 -- Indexer Integration Tests
@@ -859,9 +900,15 @@ runAllTests = do
   r61 <- test_REQ_UPDATE_AUTH_LOGOUT_COMPLETE
   r62 <- test_BRANCH_AuthState_Eq
   putStrLn ""
+  putStrLn "-- Tier Change Tests --"
+  r63 <- test_REQ_UPDATE_REQUEST_TIER_CHANGE
+  r64 <- test_REQ_UPDATE_TIER_CHANGE_SUCCESS
+  r65 <- test_REQ_UPDATE_TIER_CHANGE_FAILURE
+  r66 <- test_TIER_CHANGE_NO_SUBSCRIPTION
+  putStrLn ""
   putStrLn "-- Indexer Tests --"
-  r63 <- test_REQ_INDEXER_DASHBOARD_DATA
-  r64 <- test_REQ_INDEXER_EMPTY_DATA
+  r67 <- test_REQ_INDEXER_DASHBOARD_DATA
+  r68 <- test_REQ_INDEXER_EMPTY_DATA
   putStrLn ""
   let allResults = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10,
                     r11, r12, r13, r14, r15, r16, r17, r18, r19, r20,
@@ -869,7 +916,7 @@ runAllTests = do
                     r31, r32, r33, r34, r35, r36, r37, r38, r39, r40,
                     r41, r42, r43, r44, r45, r46, r47, r48, r49, r50,
                     r51, r52, r53, r54, r55, r56, r57, r58, r59, r60,
-                    r61, r62, r63, r64]
+                    r61, r62, r63, r64, r65, r66, r67, r68]
   printResults allResults
   where
     printResults : List Bool -> IO ()

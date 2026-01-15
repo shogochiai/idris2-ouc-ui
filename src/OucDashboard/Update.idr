@@ -26,6 +26,10 @@ data Msg
   | GotSubscription Subscription      -- REQ_UPDATE_GOT_SUBSCRIPTION
   | GotTreasury Treasury              -- REQ_UPDATE_GOT_TREASURY
   | GotUpgradeEvents (List UpgradeEvent) -- REQ_UPDATE_GOT_UPGRADE_EVENTS
+  -- Tier Management
+  | RequestTierChange Tier            -- REQ_UPDATE_REQUEST_TIER_CHANGE
+  | TierChangeSuccess Tier            -- REQ_UPDATE_TIER_CHANGE_SUCCESS
+  | TierChangeFailure String          -- REQ_UPDATE_TIER_CHANGE_FAILURE
   -- Authentication (REQ_UPDATE_AUTH_*)
   | LoginRequest                      -- REQ_UPDATE_AUTH_LOGIN_REQUEST
   | LoginSuccess String               -- REQ_UPDATE_AUTH_LOGIN_SUCCESS (principal)
@@ -87,3 +91,16 @@ update LogoutRequest model = { authState := Authenticating } model
 
 -- REQ_UPDATE_AUTH_LOGOUT_COMPLETE: Reset to not authenticated
 update LogoutComplete model = { authState := NotAuthenticated } model
+
+-- REQ_UPDATE_REQUEST_TIER_CHANGE: Start tier change process (sets loading)
+update (RequestTierChange tier) model = { loadState := Loading } model
+
+-- REQ_UPDATE_TIER_CHANGE_SUCCESS: Update subscription with new tier
+update (TierChangeSuccess tier) model =
+  case model.subscription of
+    Nothing => { loadState := Loaded } model
+    Just sub => { subscription := Just ({ currentTier := tier } sub)
+                , loadState := Loaded } model
+
+-- REQ_UPDATE_TIER_CHANGE_FAILURE: Set error state
+update (TierChangeFailure msg) model = { loadState := Failed msg } model

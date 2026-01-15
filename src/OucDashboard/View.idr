@@ -204,26 +204,53 @@ viewEvents evts =
 -- Economics View (REQ_VIEW_TIER_STATUS)
 -- =============================================================================
 
-||| REQ_VIEW_TIER_STATUS: Display current tier badge with sync frequency
+||| Tier option button
+tierOptionButton : Tier -> Tier -> Node Msg
+tierOptionButton currentTier tier =
+  let isActive = currentTier == tier
+      btnClass = if isActive then "tier-btn active" else "tier-btn"
+  in button [onClick (RequestTierChange tier), class btnClass]
+       [ span [class (tierClass tier)] [Text (show tier)]
+       , span [class "tier-freq"] [Text (tierSyncFreq tier)]
+       , span [class "tier-cost"] [Text ("¥" ++ show (tierMonthlyCost tier) ++ "/mo")]
+       ]
+
+||| Tier selection grid
+viewTierSelector : Tier -> Node Msg
+viewTierSelector currentTier =
+  div [class "tier-selector"]
+    [ h5 [] [Text "Change Tier"]
+    , div [class "tier-grid"]
+        [ tierOptionButton currentTier Archive
+        , tierOptionButton currentTier Economy
+        , tierOptionButton currentTier Standard
+        , tierOptionButton currentTier RealTime
+        ]
+    ]
+
+||| REQ_VIEW_TIER_STATUS: Display current tier badge with sync frequency and tier selector
 export
 viewTierStatus : Maybe Subscription -> Node Msg
 viewTierStatus Nothing =
   div [class "empty-state"] [Text "No subscription data"]
 viewTierStatus (Just sub) =
-  div [class "card tier-card"]
-    [ div [class "card-header"]
-        [ h4 [] [Text "Subscription Status"]
-        ]
-    , div [class "card-body"]
-        [ div [class "tier-info"]
-            [ span [class (tierClass sub.currentTier)] [Text (show sub.currentTier)]
-            , span [class "sync-freq"] [Text ("Sync: " ++ tierSyncFreq sub.currentTier)]
+  div [class "economics-panel"]
+    [ div [class "card tier-card"]
+        [ div [class "card-header"]
+            [ h4 [] [Text "Current Subscription"]
             ]
-        , p [class "cost"] [Text ("Monthly: ¥" ++ show (tierMonthlyCost sub.currentTier))]
-        , p [class "expiry"] [Text ("Expires: " ++ sub.expiryDate)]
-        , p [class "auto-renew"]
-            [Text (if sub.autoRenew then "Auto-renew: ON" else "Auto-renew: OFF")]
+        , div [class "card-body"]
+            [ div [class "tier-info"]
+                [ span [class (tierClass sub.currentTier)] [Text (show sub.currentTier)]
+                , span [class "sync-freq"] [Text ("Sync: " ++ tierSyncFreq sub.currentTier)]
+                ]
+            , p [class "cost"] [Text ("Monthly: ¥" ++ show (tierMonthlyCost sub.currentTier))]
+            , p [class "expiry"] [Text ("Expires: " ++ sub.expiryDate)]
+            , p [class "auto-renew"]
+                [Text (if sub.autoRenew then "Auto-renew: ON" else "Auto-renew: OFF")]
+            ]
         ]
+    , viewTierSelector sub.currentTier
     ]
 
 -- =============================================================================
