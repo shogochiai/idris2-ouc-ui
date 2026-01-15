@@ -8,6 +8,13 @@ type = "idris2-dom-mvc"
 [coverage]
 threshold = 80
 test_modules = ["OucDashboard.Tests.AllTests"]
+exclude = [
+  "Builtin.*",
+  "Text.HTML.*",
+  "Web.MVC.*",
+  "JS.*",
+  "Control.Monad.Dom.*"
+]
 
 [ask]
 default_steps = [1, 2, 3, 4]

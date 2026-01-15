@@ -24,6 +24,20 @@ proposalStatusClass Approved = "badge badge-success"
 proposalStatusClass Rejected = "badge badge-danger"
 proposalStatusClass Executed = "badge badge-primary"
 
+||| Tier badge CSS class
+tierClass : Tier -> String
+tierClass Archive  = "badge badge-secondary"
+tierClass Economy  = "badge badge-info"
+tierClass Standard = "badge badge-primary"
+tierClass RealTime = "badge badge-success"
+
+||| Upgrade status badge CSS class
+upgradeStatusClass : UpgradeStatus -> String
+upgradeStatusClass UpgradeProposed = "badge badge-info"
+upgradeStatusClass UpgradeApproved = "badge badge-success"
+upgradeStatusClass UpgradeRejected = "badge badge-danger"
+upgradeStatusClass UpgradeExecuted = "badge badge-primary"
+
 -- =============================================================================
 -- Tab Navigation (REQ_VIEW_*)
 -- =============================================================================
@@ -42,6 +56,8 @@ tabNav activeTab =
     , tabButton activeTab TabOUs
     , tabButton activeTab TabProposals
     , tabButton activeTab TabEvents
+    , tabButton activeTab TabEconomics
+    , tabButton activeTab TabTreasury
     ]
 
 -- =============================================================================
@@ -185,6 +201,101 @@ viewEvents evts =
     ]
 
 -- =============================================================================
+-- Economics View (REQ_VIEW_TIER_STATUS)
+-- =============================================================================
+
+||| REQ_VIEW_TIER_STATUS: Display current tier badge with sync frequency
+export
+viewTierStatus : Maybe Subscription -> Node Msg
+viewTierStatus Nothing =
+  div [class "empty-state"] [Text "No subscription data"]
+viewTierStatus (Just sub) =
+  div [class "card tier-card"]
+    [ div [class "card-header"]
+        [ h4 [] [Text "Subscription Status"]
+        ]
+    , div [class "card-body"]
+        [ div [class "tier-info"]
+            [ span [class (tierClass sub.currentTier)] [Text (show sub.currentTier)]
+            , span [class "sync-freq"] [Text ("Sync: " ++ tierSyncFreq sub.currentTier)]
+            ]
+        , p [class "cost"] [Text ("Monthly: ¥" ++ show (tierMonthlyCost sub.currentTier))]
+        , p [class "expiry"] [Text ("Expires: " ++ sub.expiryDate)]
+        , p [class "auto-renew"]
+            [Text (if sub.autoRenew then "Auto-renew: ON" else "Auto-renew: OFF")]
+        ]
+    ]
+
+-- =============================================================================
+-- Treasury View (REQ_VIEW_TREASURY_BALANCE)
+-- =============================================================================
+
+||| REQ_VIEW_TREASURY_BALANCE: Display treasury balances with 70/30 distribution
+export
+viewTreasuryBalance : Maybe Treasury -> Node Msg
+viewTreasuryBalance Nothing =
+  div [class "empty-state"] [Text "No treasury data"]
+viewTreasuryBalance (Just t) =
+  div [class "card treasury-card"]
+    [ div [class "card-header"]
+        [ h4 [] [Text "Treasury Balances"]
+        , span [class "badge badge-info"] [Text "70/30 Split"]
+        ]
+    , div [class "card-body"]
+        [ div [class "balance-row"]
+            [ span [class "label"] [Text "ckETH:"]
+            , span [class "value"] [Text (show t.ckEthBalance ++ " wei")]
+            ]
+        , div [class "balance-row"]
+            [ span [class "label"] [Text "ICP:"]
+            , span [class "value"] [Text (show t.icpBalance ++ " e8s")]
+            ]
+        , div [class "balance-row"]
+            [ span [class "label"] [Text "Cycles:"]
+            , span [class "value"] [Text (show t.cyclesBalance)]
+            ]
+        ]
+    ]
+
+-- =============================================================================
+-- Upgrade Timeline View (REQ_VIEW_UPGRADE_TIMELINE)
+-- =============================================================================
+
+||| Render single upgrade event row
+viewUpgradeEventRow : UpgradeEvent -> Node Msg
+viewUpgradeEventRow evt =
+  tr []
+    [ td [class "timestamp"] [Text evt.timestamp]
+    , td [class "upgrade-id"] [Text evt.upgradeId]
+    , td [class "ou-address"] [Text evt.ouAddress]
+    , td [class "status"] [span [class (upgradeStatusClass evt.status)] [Text (show evt.status)]]
+    , td [class "votes"]
+        [ span [class "votes-for"] [Text ("+" ++ show evt.votesFor)]
+        , Text " / "
+        , span [class "votes-against"] [Text ("-" ++ show evt.votesAgainst)]
+        ]
+    ]
+
+||| REQ_VIEW_UPGRADE_TIMELINE: Display upgrade proposal timeline with voting progress
+export
+viewUpgradeTimeline : List UpgradeEvent -> Node Msg
+viewUpgradeTimeline [] =
+  div [class "empty-state"] [Text "No upgrade events"]
+viewUpgradeTimeline evts =
+  table [class "upgrade-table"]
+    [ thead []
+        [ tr []
+            [ th [] [Text "Time"]
+            , th [] [Text "Upgrade ID"]
+            , th [] [Text "OU"]
+            , th [] [Text "Status"]
+            , th [] [Text "Votes"]
+            ]
+        ]
+    , tbody [] (map viewUpgradeEventRow evts)
+    ]
+
+-- =============================================================================
 -- Main Content Router
 -- =============================================================================
 
@@ -195,6 +306,8 @@ viewContent model = case model.activeTab of
   TabOUs       => viewOUs model.ous
   TabProposals => viewProposals model.proposals
   TabEvents    => viewEvents model.events
+  TabEconomics => viewTierStatus model.subscription
+  TabTreasury  => viewTreasuryBalance model.treasury
 
 -- =============================================================================
 -- Main View

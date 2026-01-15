@@ -50,6 +50,60 @@ Eq OUStatus where
 public export
 data ProposalStatus = Pending | Approved | Rejected | Executed
 
+||| REQ_MODEL_TIER: Subscription tier with sync frequency and monthly cost
+public export
+data Tier = Archive | Economy | Standard | RealTime
+
+public export
+Show Tier where
+  show Archive  = "Archive"
+  show Economy  = "Economy"
+  show Standard = "Standard"
+  show RealTime = "Real-time"
+
+public export
+Eq Tier where
+  Archive  == Archive  = True
+  Economy  == Economy  = True
+  Standard == Standard = True
+  RealTime == RealTime = True
+  _        == _        = False
+
+||| Get sync frequency description for a tier
+public export
+tierSyncFreq : Tier -> String
+tierSyncFreq Archive  = "1/day"
+tierSyncFreq Economy  = "1/hour"
+tierSyncFreq Standard = "1/15min"
+tierSyncFreq RealTime = "1/min"
+
+||| Get monthly cost (JPY) for a tier
+public export
+tierMonthlyCost : Tier -> Nat
+tierMonthlyCost Archive  = 3
+tierMonthlyCost Economy  = 80
+tierMonthlyCost Standard = 300
+tierMonthlyCost RealTime = 4500
+
+||| Upgrade event status
+public export
+data UpgradeStatus = UpgradeProposed | UpgradeApproved | UpgradeRejected | UpgradeExecuted
+
+public export
+Show UpgradeStatus where
+  show UpgradeProposed = "Proposed"
+  show UpgradeApproved = "Approved"
+  show UpgradeRejected = "Rejected"
+  show UpgradeExecuted = "Executed"
+
+public export
+Eq UpgradeStatus where
+  UpgradeProposed == UpgradeProposed = True
+  UpgradeApproved == UpgradeApproved = True
+  UpgradeRejected == UpgradeRejected = True
+  UpgradeExecuted == UpgradeExecuted = True
+  _               == _               = False
+
 public export
 Show ProposalStatus where
   show Pending  = "Pending"
@@ -109,13 +163,40 @@ record Event where
   chain     : Chain
   details   : String
 
+||| REQ_MODEL_SUBSCRIPTION: Subscription with current tier, expiry, and auto-renew
+public export
+record Subscription where
+  constructor MkSubscription
+  currentTier : Tier
+  expiryDate  : String  -- ISO 8601
+  autoRenew   : Bool
+
+||| REQ_MODEL_TREASURY: Treasury balances (ckETH, ICP, Cycles)
+public export
+record Treasury where
+  constructor MkTreasury
+  ckEthBalance  : Nat    -- in wei (smallest unit)
+  icpBalance    : Nat    -- in e8s (smallest unit)
+  cyclesBalance : Nat    -- cycles
+
+||| REQ_MODEL_UPGRADE_EVENT: Upgrade event with status and voting progress
+public export
+record UpgradeEvent where
+  constructor MkUpgradeEvent
+  upgradeId   : String
+  ouAddress   : String
+  status      : UpgradeStatus
+  votesFor    : Nat
+  votesAgainst: Nat
+  timestamp   : String
+
 -- =============================================================================
 -- UI State
 -- =============================================================================
 
 ||| Active tab in the dashboard
 public export
-data Tab = TabAuditors | TabOUs | TabProposals | TabEvents
+data Tab = TabAuditors | TabOUs | TabProposals | TabEvents | TabEconomics | TabTreasury
 
 public export
 Show Tab where
@@ -123,6 +204,8 @@ Show Tab where
   show TabOUs       = "OUs"
   show TabProposals = "Proposals"
   show TabEvents    = "Events"
+  show TabEconomics = "Economics"
+  show TabTreasury  = "Treasury"
 
 public export
 Eq Tab where
@@ -130,6 +213,8 @@ Eq Tab where
   TabOUs       == TabOUs       = True
   TabProposals == TabProposals = True
   TabEvents    == TabEvents    = True
+  TabEconomics == TabEconomics = True
+  TabTreasury  == TabTreasury  = True
   _            == _            = False
 
 ||| Loading state for API calls
@@ -160,21 +245,27 @@ Eq LoadState where
 public export
 record Model where
   constructor MkModel
-  activeTab   : Tab
-  loadState   : LoadState
-  auditors    : List Auditor
-  ous         : List OU
-  proposals   : List Proposal
-  events      : List Event
+  activeTab     : Tab
+  loadState     : LoadState
+  auditors      : List Auditor
+  ous           : List OU
+  proposals     : List Proposal
+  events        : List Event
+  subscription  : Maybe Subscription
+  treasury      : Maybe Treasury
+  upgradeEvents : List UpgradeEvent
 
 ||| Initial model with empty data
 export
 initialModel : Model
 initialModel = MkModel
-  { activeTab   = TabOUs
-  , loadState   = Idle
-  , auditors    = []
-  , ous         = []
-  , proposals   = []
-  , events      = []
+  { activeTab     = TabOUs
+  , loadState     = Idle
+  , auditors      = []
+  , ous           = []
+  , proposals     = []
+  , events        = []
+  , subscription  = Nothing
+  , treasury      = Nothing
+  , upgradeEvents = []
   }

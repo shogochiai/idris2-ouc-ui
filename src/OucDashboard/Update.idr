@@ -22,6 +22,10 @@ data Msg
   | GotProposals (List Proposal)      -- REQ_UPDATE_GOT_PROPOSALS
   | GotEvents (List Event)            -- REQ_UPDATE_GOT_EVENTS
   | ApiError String                   -- REQ_UPDATE_API_ERROR
+  -- Economics Integration
+  | GotSubscription Subscription      -- REQ_UPDATE_GOT_SUBSCRIPTION
+  | GotTreasury Treasury              -- REQ_UPDATE_GOT_TREASURY
+  | GotUpgradeEvents (List UpgradeEvent) -- REQ_UPDATE_GOT_UPGRADE_EVENTS
 
 -- =============================================================================
 -- Update Function (MVU pattern)
@@ -53,3 +57,12 @@ update (GotEvents es) model = { events := es, loadState := Loaded } model
 
 -- REQ_UPDATE_API_ERROR: Set error state
 update (ApiError msg) model = { loadState := Failed msg } model
+
+-- REQ_UPDATE_GOT_SUBSCRIPTION: Update subscription info
+update (GotSubscription sub) model = { subscription := Just sub, loadState := Loaded } model
+
+-- REQ_UPDATE_GOT_TREASURY: Update treasury balances
+update (GotTreasury t) model = { treasury := Just t, loadState := Loaded } model
+
+-- REQ_UPDATE_GOT_UPGRADE_EVENTS: Update upgrade event history
+update (GotUpgradeEvents evts) model = { upgradeEvents := evts, loadState := Loaded } model

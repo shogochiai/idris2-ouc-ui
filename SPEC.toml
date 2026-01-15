@@ -40,34 +40,6 @@ priority = "must"
 tags = ["model", "types"]
 
 # =============================================================================
-# API Fetch Requirements
-# =============================================================================
-
-[[spec]]
-id = "REQ_FETCH_AUDITORS"
-description = "Fetch auditors from /api/auditors endpoint"
-priority = "must"
-tags = ["api", "fetch"]
-
-[[spec]]
-id = "REQ_FETCH_OUS"
-description = "Fetch OUs from /api/ous endpoint"
-priority = "must"
-tags = ["api", "fetch"]
-
-[[spec]]
-id = "REQ_FETCH_PROPOSALS"
-description = "Fetch proposals from /api/proposals endpoint"
-priority = "must"
-tags = ["api", "fetch"]
-
-[[spec]]
-id = "REQ_FETCH_EVENTS"
-description = "Fetch events from /api/events endpoint"
-priority = "must"
-tags = ["api", "fetch"]
-
-# =============================================================================
 # View Requirements - Display
 # =============================================================================
 
@@ -158,3 +130,75 @@ id = "REQ_UPDATE_API_ERROR"
 description = "ApiError sets error state with message"
 priority = "must"
 tags = ["update", "error"]
+
+# =============================================================================
+# Economics Integration - Tier & Subscription (from ecosystem.md)
+# =============================================================================
+
+[[spec]]
+id = "REQ_MODEL_TIER"
+description = "Tier type has Archive/Economy/Standard/Real-time with sync frequency and monthly cost"
+priority = "should"
+tags = ["model", "economics"]
+
+[[spec]]
+id = "REQ_MODEL_SUBSCRIPTION"
+description = "Subscription type has current tier, expiry date, and auto-renew flag"
+priority = "should"
+tags = ["model", "economics"]
+
+[[spec]]
+id = "REQ_VIEW_TIER_STATUS"
+description = "Display current tier badge with sync frequency (1/day, 1/hour, 1/15min, 1/min)"
+priority = "should"
+tags = ["view", "economics"]
+
+[[spec]]
+id = "REQ_UPDATE_GOT_SUBSCRIPTION"
+description = "GotSubscription updates model with tier and subscription status"
+priority = "should"
+tags = ["update", "economics"]
+
+# =============================================================================
+# Treasury Integration - Balance Display (from ecosystem.md)
+# =============================================================================
+
+[[spec]]
+id = "REQ_MODEL_TREASURY"
+description = "Treasury type has ckETH balance, ICP balance, and cycles remaining"
+priority = "should"
+tags = ["model", "treasury"]
+
+[[spec]]
+id = "REQ_VIEW_TREASURY_BALANCE"
+description = "Display treasury balances (ckETH, ICP, Cycles) with 70/30 distribution indicator"
+priority = "should"
+tags = ["view", "treasury"]
+
+[[spec]]
+id = "REQ_UPDATE_GOT_TREASURY"
+description = "GotTreasury updates model with current balances"
+priority = "should"
+tags = ["update", "treasury"]
+
+# =============================================================================
+# OU Event Integration - Upgrade Monitoring (from ecosystem.md)
+# =============================================================================
+
+[[spec]]
+id = "REQ_MODEL_UPGRADE_EVENT"
+description = "UpgradeEvent type has UpgradeProposed/Approved/Rejected/Executed status"
+priority = "could"
+tags = ["model", "upgrade"]
+
+[[spec]]
+id = "REQ_VIEW_UPGRADE_TIMELINE"
+description = "Display upgrade proposal timeline with voting progress"
+priority = "could"
+tags = ["view", "upgrade"]
+
+[[spec]]
+id = "REQ_UPDATE_GOT_UPGRADE_EVENTS"
+description = "GotUpgradeEvents updates model with OU upgrade event history"
+priority = "could"
+tags = ["update", "upgrade"]
