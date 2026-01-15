@@ -1,0 +1,29 @@
+{
+  "name": "idris2-ouc-ui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:idris": "pack build oucdashboard.ipkg",
+    "build:dist": "cp build/exec/oucdashboard dist/app.js && cp src/index.html dist/ && cp src/style.css dist/",
+    "build": "npm run build:idris && npm run build:dist",
+    "deploy:local": "dfx deploy --network local",
+    "deploy:ic": "dfx deploy --network ic",
+    "test": "pack test oucdashboard-tests.ipkg"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shogochiai/idris2-ouc-ui.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/shogochiai/idris2-ouc-ui/issues"
+  },
+  "homepage": "https://github.com/shogochiai/idris2-ouc-ui#readme",
+  "dependencies": {
+    "playwright": "^1.57.0"
+  }
+}
