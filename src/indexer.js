@@ -157,11 +157,68 @@ export async function fetchDashboardData() {
 }
 
 // =============================================================================
+// Real-time Monitoring (Polling)
+// =============================================================================
+
+let pollingInterval = null;
+let lastEventIds = new Set();
+
+// Start periodic polling
+export function startPolling(intervalMs, callback) {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+  }
+
+  pollingInterval = setInterval(async () => {
+    try {
+      const data = await fetchDashboardData();
+      callback(data);
+    } catch (err) {
+      console.error("Polling error:", err);
+    }
+  }, intervalMs);
+
+  // Immediate first poll
+  fetchDashboardData().then(callback).catch(console.error);
+}
+
+// Stop polling
+export function stopPolling() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+}
+
+// Detect new events (returns events not seen before)
+export function detectNewEvents(events) {
+  const newEvents = [];
+  const currentIds = new Set();
+
+  for (const event of events) {
+    const id = event.eventId || `${event.txHash}-${event.logIndex}`;
+    currentIds.add(id);
+    if (!lastEventIds.has(id)) {
+      newEvents.push(event);
+    }
+  }
+
+  lastEventIds = currentIds;
+  return newEvents;
+}
+
+// Get polling status
+export function isPolling() {
+  return pollingInterval !== null;
+}
+
+// =============================================================================
 // Expose to global scope for Idris2 FFI
 // =============================================================================
 
 if (typeof window !== 'undefined') {
   window.oucIndexer = {
+    // Query APIs
     fetchEvents,
     fetchEventById,
     fetchStats,
@@ -172,7 +229,13 @@ if (typeof window !== 'undefined') {
     fetchTreasury,
     fetchOucStatus,
     fetchDashboardData,
+    // Write APIs
     changeTier,
-    setAutoRenew
+    setAutoRenew,
+    // Polling APIs
+    startPolling,
+    stopPolling,
+    detectNewEvents,
+    isPolling
   };
 }

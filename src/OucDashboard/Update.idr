@@ -30,6 +30,13 @@ data Msg
   | RequestTierChange Tier            -- REQ_UPDATE_REQUEST_TIER_CHANGE
   | TierChangeSuccess Tier            -- REQ_UPDATE_TIER_CHANGE_SUCCESS
   | TierChangeFailure String          -- REQ_UPDATE_TIER_CHANGE_FAILURE
+  -- Real-time Monitoring
+  | StartPolling                      -- REQ_UPDATE_START_POLLING
+  | StopPolling                       -- REQ_UPDATE_STOP_POLLING
+  | PollTick                          -- REQ_UPDATE_POLL_TICK
+  | NewEventDetected String           -- REQ_UPDATE_NEW_EVENT (message)
+  | DismissNotification Nat           -- REQ_UPDATE_DISMISS_NOTIF
+  | ClearNotifications                -- REQ_UPDATE_CLEAR_NOTIFS
   -- Authentication (REQ_UPDATE_AUTH_*)
   | LoginRequest                      -- REQ_UPDATE_AUTH_LOGIN_REQUEST
   | LoginSuccess String               -- REQ_UPDATE_AUTH_LOGIN_SUCCESS (principal)
@@ -104,3 +111,28 @@ update (TierChangeSuccess tier) model =
 
 -- REQ_UPDATE_TIER_CHANGE_FAILURE: Set error state
 update (TierChangeFailure msg) model = { loadState := Failed msg } model
+
+-- REQ_UPDATE_START_POLLING: Start real-time monitoring
+update StartPolling model = { isPolling := True } model
+
+-- REQ_UPDATE_STOP_POLLING: Stop real-time monitoring
+update StopPolling model = { isPolling := False } model
+
+-- REQ_UPDATE_POLL_TICK: Triggered on each poll (refresh loadState)
+update PollTick model = { loadState := Loading } model
+
+-- REQ_UPDATE_NEW_EVENT: Add notification for new event
+update (NewEventDetected msg) model =
+  let notif = MkNotification model.nextNotifId msg "" False
+  in { notifications := notif :: model.notifications
+     , nextNotifId := model.nextNotifId + 1
+     } model
+
+-- REQ_UPDATE_DISMISS_NOTIF: Mark notification as dismissed
+update (DismissNotification nid) model =
+  let dismiss : Notification -> Notification
+      dismiss n = if n.notifId == nid then { dismissed := True } n else n
+  in { notifications := map dismiss model.notifications } model
+
+-- REQ_UPDATE_CLEAR_NOTIFS: Clear all notifications
+update ClearNotifications model = { notifications := [] } model

@@ -351,6 +351,50 @@ viewAuthStatus (Authenticated principal) =
     ]
 
 -- =============================================================================
+-- Notifications View (REQ_VIEW_NOTIFICATIONS)
+-- =============================================================================
+
+||| Single notification item
+viewNotificationItem : Notification -> Node Msg
+viewNotificationItem notif =
+  if notif.dismissed then Empty
+  else
+    div [class "notification-item"]
+      [ span [class "notif-message"] [Text notif.message]
+      , button [onClick (DismissNotification notif.notifId), class "notif-dismiss"]
+          [Text "×"]
+      ]
+
+||| Notification panel
+export
+viewNotifications : List Notification -> Node Msg
+viewNotifications notifs =
+  let active = filter (\n => not n.dismissed) notifs
+  in if null active then Empty
+     else div [class "notification-panel"]
+       [ div [class "notification-header"]
+           [ span [] [Text ("Notifications (" ++ show (length active) ++ ")")]
+           , button [onClick ClearNotifications, class "btn-clear"] [Text "Clear All"]
+           ]
+       , div [class "notification-list"]
+           (map viewNotificationItem active)
+       ]
+
+||| Polling toggle button
+export
+viewPollingToggle : Bool -> Node Msg
+viewPollingToggle isOn =
+  if isOn
+  then button [onClick StopPolling, class "btn btn-polling active"]
+         [ span [class "polling-indicator"] []
+         , Text "Live"
+         ]
+  else button [onClick StartPolling, class "btn btn-polling"]
+         [ span [class "polling-indicator"] []
+         , Text "Live"
+         ]
+
+-- =============================================================================
 -- Main Content Router
 -- =============================================================================
 
@@ -376,10 +420,12 @@ view model =
     [ header [class "header"]
         [ h1 [] [Text "OUC Dashboard"]
         , div [class "header-actions"]
-            [ viewAuthStatus model.authState
+            [ viewPollingToggle model.isPolling
+            , viewAuthStatus model.authState
             , button [onClick Refresh, class "btn btn-refresh"] [Text "Refresh"]
             ]
         ]
+    , viewNotifications model.notifications
     , tabNav model.activeTab
     , div [class "main-content"]
         [ case model.loadState of

@@ -221,6 +221,23 @@ Eq Tab where
 public export
 data LoadState = Idle | Loading | Loaded | Failed String
 
+||| Notification for real-time alerts
+public export
+record Notification where
+  constructor MkNotification
+  notifId   : Nat
+  message   : String
+  timestamp : String
+  dismissed : Bool
+
+public export
+Show Notification where
+  show n = "Notification(" ++ n.message ++ ")"
+
+public export
+Eq Notification where
+  n1 == n2 = n1.notifId == n2.notifId
+
 ||| REQ_MODEL_AUTH: Authentication state for Internet Identity
 public export
 data AuthState = NotAuthenticated | Authenticating | Authenticated String
@@ -262,29 +279,36 @@ Eq LoadState where
 public export
 record Model where
   constructor MkModel
-  activeTab     : Tab
-  loadState     : LoadState
-  authState     : AuthState
-  auditors      : List Auditor
-  ous           : List OU
-  proposals     : List Proposal
-  events        : List Event
-  subscription  : Maybe Subscription
-  treasury      : Maybe Treasury
-  upgradeEvents : List UpgradeEvent
+  activeTab      : Tab
+  loadState      : LoadState
+  authState      : AuthState
+  auditors       : List Auditor
+  ous            : List OU
+  proposals      : List Proposal
+  events         : List Event
+  subscription   : Maybe Subscription
+  treasury       : Maybe Treasury
+  upgradeEvents  : List UpgradeEvent
+  -- Real-time monitoring
+  isPolling      : Bool
+  notifications  : List Notification
+  nextNotifId    : Nat
 
 ||| Initial model with empty data
 export
 initialModel : Model
 initialModel = MkModel
-  { activeTab     = TabOUs
-  , loadState     = Idle
-  , authState     = NotAuthenticated
-  , auditors      = []
-  , ous           = []
-  , proposals     = []
-  , events        = []
-  , subscription  = Nothing
-  , treasury      = Nothing
-  , upgradeEvents = []
+  { activeTab      = TabOUs
+  , loadState      = Idle
+  , authState      = NotAuthenticated
+  , auditors       = []
+  , ous            = []
+  , proposals      = []
+  , events         = []
+  , subscription   = Nothing
+  , treasury       = Nothing
+  , upgradeEvents  = []
+  , isPolling      = False
+  , notifications  = []
+  , nextNotifId    = 0
   }

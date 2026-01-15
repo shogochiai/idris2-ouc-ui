@@ -456,3 +456,113 @@ body {
   font-weight: 600;
   color: var(--text);
 }
+
+/* Notifications */
+.notification-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--warning);
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: rgba(245, 158, 11, 0.1);
+  border-bottom: 1px solid var(--border);
+}
+
+.notification-header span {
+  font-weight: 600;
+  color: var(--warning);
+}
+
+.btn-clear {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.btn-clear:hover {
+  color: var(--text);
+}
+
+.notification-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notif-message {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.notif-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 0 0.25rem;
+}
+
+.notif-dismiss:hover {
+  color: var(--danger);
+}
+
+/* Polling Toggle */
+.btn-polling {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-polling:hover {
+  border-color: var(--success);
+}
+
+.btn-polling.active {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.polling-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.btn-polling.active .polling-indicator {
+  background: var(--success);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

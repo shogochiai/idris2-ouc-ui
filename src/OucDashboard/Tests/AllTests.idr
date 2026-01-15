@@ -645,7 +645,14 @@ test_BRANCH_Update_AllMsgs = do
       _ = update (RequestTierChange Archive) m0
       _ = update (TierChangeSuccess Standard) m0
       _ = update (TierChangeFailure "error") m0
-  putStrLn "  PASS: BRANCH_Update_AllMsgs (24 branches)"
+      -- Realtime monitoring messages
+      _ = update StartPolling m0
+      _ = update StopPolling m0
+      _ = update PollTick m0
+      _ = update (NewEventDetected "test") m0
+      _ = update (DismissNotification 0) m0
+      _ = update ClearNotifications m0
+  putStrLn "  PASS: BRANCH_Update_AllMsgs (30 branches)"
   pure True
 
 -- | Test == operators with more cross-constructor comparisons
@@ -785,6 +792,57 @@ test_TIER_CHANGE_NO_SUBSCRIPTION = do
   pure (r1 && r2)
 
 -- =============================================================================
+-- Real-time Monitoring Tests
+-- =============================================================================
+
+-- | SPEC: REQ_UPDATE_START_POLLING - StartPolling sets isPolling to True
+test_REQ_UPDATE_START_POLLING : IO Bool
+test_REQ_UPDATE_START_POLLING = do
+  let m = update StartPolling initialModel
+  assertEq "isPolling is True" True m.isPolling
+
+-- | SPEC: REQ_UPDATE_STOP_POLLING - StopPolling sets isPolling to False
+test_REQ_UPDATE_STOP_POLLING : IO Bool
+test_REQ_UPDATE_STOP_POLLING = do
+  let m0 = { isPolling := True } initialModel
+      m = update StopPolling m0
+  assertEq "isPolling is False" False m.isPolling
+
+-- | SPEC: REQ_UPDATE_NEW_EVENT - NewEventDetected adds notification
+test_REQ_UPDATE_NEW_EVENT : IO Bool
+test_REQ_UPDATE_NEW_EVENT = do
+  let m = update (NewEventDetected "New upgrade proposal") initialModel
+  r1 <- assertEq "notification count" 1 (length m.notifications)
+  r2 <- assertEq "nextNotifId incremented" 1 m.nextNotifId
+  pure (r1 && r2)
+
+-- | SPEC: REQ_UPDATE_DISMISS_NOTIF - DismissNotification marks as dismissed
+test_REQ_UPDATE_DISMISS_NOTIF : IO Bool
+test_REQ_UPDATE_DISMISS_NOTIF = do
+  let m0 = update (NewEventDetected "Test") initialModel
+      m = update (DismissNotification 0) m0
+  case head' m.notifications of
+    Nothing => do putStrLn "  FAIL: no notification"; pure False
+    Just n => assertTrue "notification is dismissed" n.dismissed
+
+-- | SPEC: REQ_UPDATE_CLEAR_NOTIFS - ClearNotifications removes all notifications
+test_REQ_UPDATE_CLEAR_NOTIFS : IO Bool
+test_REQ_UPDATE_CLEAR_NOTIFS = do
+  let m0 = update (NewEventDetected "Test1") initialModel
+      m1 = update (NewEventDetected "Test2") m0
+      m = update ClearNotifications m1
+  assertTrue "notifications cleared" (null m.notifications)
+
+-- | Test Notification type
+test_NOTIFICATION_TYPE : IO Bool
+test_NOTIFICATION_TYPE = do
+  let n = MkNotification 1 "Test message" "2025-01-15" False
+  r1 <- assertEq "notifId" 1 n.notifId
+  r2 <- assertEq "message" "Test message" n.message
+  r3 <- assertEq "dismissed" False n.dismissed
+  pure (r1 && r2 && r3)
+
+-- =============================================================================
 -- Indexer Integration Tests
 -- =============================================================================
 
@@ -906,9 +964,17 @@ runAllTests = do
   r65 <- test_REQ_UPDATE_TIER_CHANGE_FAILURE
   r66 <- test_TIER_CHANGE_NO_SUBSCRIPTION
   putStrLn ""
+  putStrLn "-- Realtime Monitoring Tests --"
+  r67 <- test_REQ_UPDATE_START_POLLING
+  r68 <- test_REQ_UPDATE_STOP_POLLING
+  r69 <- test_REQ_UPDATE_NEW_EVENT
+  r70 <- test_REQ_UPDATE_DISMISS_NOTIF
+  r71 <- test_REQ_UPDATE_CLEAR_NOTIFS
+  r72 <- test_NOTIFICATION_TYPE
+  putStrLn ""
   putStrLn "-- Indexer Tests --"
-  r67 <- test_REQ_INDEXER_DASHBOARD_DATA
-  r68 <- test_REQ_INDEXER_EMPTY_DATA
+  r73 <- test_REQ_INDEXER_DASHBOARD_DATA
+  r74 <- test_REQ_INDEXER_EMPTY_DATA
   putStrLn ""
   let allResults = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10,
                     r11, r12, r13, r14, r15, r16, r17, r18, r19, r20,
@@ -916,7 +982,8 @@ runAllTests = do
                     r31, r32, r33, r34, r35, r36, r37, r38, r39, r40,
                     r41, r42, r43, r44, r45, r46, r47, r48, r49, r50,
                     r51, r52, r53, r54, r55, r56, r57, r58, r59, r60,
-                    r61, r62, r63, r64, r65, r66, r67, r68]
+                    r61, r62, r63, r64, r65, r66, r67, r68, r69, r70,
+                    r71, r72, r73, r74]
   printResults allResults
   where
     printResults : List Bool -> IO ()
