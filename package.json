@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build:idris": "pack build oucdashboard.ipkg",
+    "build:auth": "npx esbuild src/auth.js --bundle --format=iife --global-name=oucAuth --outfile=dist/auth.js",
     "build:dist": "cp build/exec/oucdashboard dist/app.js && cp src/index.html dist/ && cp src/style.css dist/",
-    "build": "npm run build:idris && npm run build:dist",
+    "build": "npm run build:idris && mkdir -p dist && npm run build:auth && npm run build:dist",
     "deploy:local": "dfx deploy --network local",
     "deploy:ic": "dfx deploy --network ic",
     "test": "pack test oucdashboard-tests.ipkg"
@@ -24,6 +25,12 @@
   },
   "homepage": "https://github.com/shogochiai/idris2-ouc-ui#readme",
   "dependencies": {
+    "@dfinity/agent": "^3.4.3",
+    "@dfinity/auth-client": "^3.4.3",
+    "@dfinity/principal": "^3.4.3",
     "playwright": "^1.57.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.2"
   }
 }

@@ -12,6 +12,7 @@ modules = OucDashboard.Main
         , OucDashboard.Model
         , OucDashboard.Update
         , OucDashboard.View
+        , OucDashboard.Auth
         , OucDashboard.Tests.AllTests
 
 main = OucDashboard.Main

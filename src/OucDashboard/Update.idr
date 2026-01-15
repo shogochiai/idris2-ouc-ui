@@ -26,6 +26,12 @@ data Msg
   | GotSubscription Subscription      -- REQ_UPDATE_GOT_SUBSCRIPTION
   | GotTreasury Treasury              -- REQ_UPDATE_GOT_TREASURY
   | GotUpgradeEvents (List UpgradeEvent) -- REQ_UPDATE_GOT_UPGRADE_EVENTS
+  -- Authentication (REQ_UPDATE_AUTH_*)
+  | LoginRequest                      -- REQ_UPDATE_AUTH_LOGIN_REQUEST
+  | LoginSuccess String               -- REQ_UPDATE_AUTH_LOGIN_SUCCESS (principal)
+  | LoginFailure                      -- REQ_UPDATE_AUTH_LOGIN_FAILURE
+  | LogoutRequest                     -- REQ_UPDATE_AUTH_LOGOUT_REQUEST
+  | LogoutComplete                    -- REQ_UPDATE_AUTH_LOGOUT_COMPLETE
 
 -- =============================================================================
 -- Update Function (MVU pattern)
@@ -66,3 +72,18 @@ update (GotTreasury t) model = { treasury := Just t, loadState := Loaded } model
 
 -- REQ_UPDATE_GOT_UPGRADE_EVENTS: Update upgrade event history
 update (GotUpgradeEvents evts) model = { upgradeEvents := evts, loadState := Loaded } model
+
+-- REQ_UPDATE_AUTH_LOGIN_REQUEST: Set authenticating state
+update LoginRequest model = { authState := Authenticating } model
+
+-- REQ_UPDATE_AUTH_LOGIN_SUCCESS: Set authenticated with principal
+update (LoginSuccess principal) model = { authState := Authenticated principal } model
+
+-- REQ_UPDATE_AUTH_LOGIN_FAILURE: Reset to not authenticated
+update LoginFailure model = { authState := NotAuthenticated } model
+
+-- REQ_UPDATE_AUTH_LOGOUT_REQUEST: Trigger logout (actual logout in cmd)
+update LogoutRequest model = { authState := Authenticating } model
+
+-- REQ_UPDATE_AUTH_LOGOUT_COMPLETE: Reset to not authenticated
+update LogoutComplete model = { authState := NotAuthenticated } model

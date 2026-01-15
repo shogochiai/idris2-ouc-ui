@@ -296,6 +296,34 @@ viewUpgradeTimeline evts =
     ]
 
 -- =============================================================================
+-- Auth Status View (REQ_VIEW_AUTH_STATUS)
+-- =============================================================================
+
+||| Truncate principal for display
+truncatePrincipal : String -> String
+truncatePrincipal pid =
+  if length pid > 16
+    then substr 0 8 pid ++ "..." ++ substr (length pid `minus` 5) 5 pid
+    else pid
+
+||| REQ_VIEW_AUTH_STATUS: Display authentication status with login/logout button
+export
+viewAuthStatus : AuthState -> Node Msg
+viewAuthStatus NotAuthenticated =
+  div [class "auth-status"]
+    [ button [onClick LoginRequest, class "btn btn-login"] [Text "Login with II"]
+    ]
+viewAuthStatus Authenticating =
+  div [class "auth-status"]
+    [ span [class "auth-loading"] [Text "Authenticating..."]
+    ]
+viewAuthStatus (Authenticated principal) =
+  div [class "auth-status"]
+    [ span [class "principal-badge"] [Text (truncatePrincipal principal)]
+    , button [onClick LogoutRequest, class "btn btn-logout"] [Text "Logout"]
+    ]
+
+-- =============================================================================
 -- Main Content Router
 -- =============================================================================
 
@@ -320,7 +348,10 @@ view model =
   div [class "dashboard"]
     [ header [class "header"]
         [ h1 [] [Text "OUC Dashboard"]
-        , button [onClick Refresh, class "btn btn-refresh"] [Text "Refresh"]
+        , div [class "header-actions"]
+            [ viewAuthStatus model.authState
+            , button [onClick Refresh, class "btn btn-refresh"] [Text "Refresh"]
+            ]
         ]
     , tabNav model.activeTab
     , div [class "main-content"]

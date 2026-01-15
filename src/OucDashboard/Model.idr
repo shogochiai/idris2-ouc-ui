@@ -221,6 +221,23 @@ Eq Tab where
 public export
 data LoadState = Idle | Loading | Loaded | Failed String
 
+||| REQ_MODEL_AUTH: Authentication state for Internet Identity
+public export
+data AuthState = NotAuthenticated | Authenticating | Authenticated String
+
+public export
+Show AuthState where
+  show NotAuthenticated    = "Not Authenticated"
+  show Authenticating      = "Authenticating..."
+  show (Authenticated pid) = "Authenticated: " ++ pid
+
+public export
+Eq AuthState where
+  NotAuthenticated    == NotAuthenticated    = True
+  Authenticating      == Authenticating      = True
+  (Authenticated a)   == (Authenticated b)   = a == b
+  _                   == _                   = False
+
 public export
 Show LoadState where
   show Idle       = "Idle"
@@ -247,6 +264,7 @@ record Model where
   constructor MkModel
   activeTab     : Tab
   loadState     : LoadState
+  authState     : AuthState
   auditors      : List Auditor
   ous           : List OU
   proposals     : List Proposal
@@ -261,6 +279,7 @@ initialModel : Model
 initialModel = MkModel
   { activeTab     = TabOUs
   , loadState     = Idle
+  , authState     = NotAuthenticated
   , auditors      = []
   , ous           = []
   , proposals     = []

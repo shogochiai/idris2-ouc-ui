@@ -70,6 +70,45 @@ body {
   color: white;
 }
 
+.btn-login {
+  background: var(--success);
+  color: white;
+}
+
+.btn-logout {
+  background: var(--secondary);
+  color: white;
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Auth Status */
+.auth-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-loading {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.principal-badge {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 /* Tab Navigation */
 .tab-nav {
   display: flex;

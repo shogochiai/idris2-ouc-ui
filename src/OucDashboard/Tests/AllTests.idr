@@ -634,7 +634,13 @@ test_BRANCH_Update_AllMsgs = do
       _ = update (GotSubscription (MkSubscription Archive "" False)) m0
       _ = update (GotTreasury (MkTreasury 0 0 0)) m0
       _ = update (GotUpgradeEvents []) m0
-  putStrLn "  PASS: BRANCH_Update_AllMsgs (16 branches)"
+      -- Auth messages
+      _ = update LoginRequest m0
+      _ = update (LoginSuccess "pid") m0
+      _ = update LoginFailure m0
+      _ = update LogoutRequest m0
+      _ = update LogoutComplete m0
+  putStrLn "  PASS: BRANCH_Update_AllMsgs (21 branches)"
   pure True
 
 -- | Test == operators with more cross-constructor comparisons
@@ -664,6 +670,77 @@ test_BRANCH_Eq_CrossConstructors = do
   r17 <- assertTrue "Appr/Exec" (not (UpgradeApproved == UpgradeExecuted))
   pure (r1 && r2 && r3 && r4 && r5 && r6 && r7 && r8 && r9 && r10 &&
         r11 && r12 && r13 && r14 && r15 && r16 && r17)
+
+-- =============================================================================
+-- Auth Tests (REQ_*_AUTH_*)
+-- =============================================================================
+
+-- | SPEC: REQ_MODEL_AUTH - AuthState type has NotAuthenticated/Authenticating/Authenticated(principal)
+test_REQ_MODEL_AUTH : IO Bool
+test_REQ_MODEL_AUTH = do
+  let na = NotAuthenticated
+      auth = Authenticating
+      authed = Authenticated "abc-123-def"
+  r1 <- assertEq "show NotAuthenticated" "Not Authenticated" (show na)
+  r2 <- assertEq "show Authenticating" "Authenticating..." (show auth)
+  r3 <- assertTrue "show Authenticated contains principal"
+        (show authed == "Authenticated: abc-123-def")
+  -- Initial model has NotAuthenticated
+  r4 <- assertEq "initial authState" NotAuthenticated initialModel.authState
+  pure (r1 && r2 && r3 && r4)
+
+-- | SPEC: REQ_VIEW_AUTH_STATUS - Display auth status with login/logout button and principal badge
+test_REQ_VIEW_AUTH_STATUS : IO Bool
+test_REQ_VIEW_AUTH_STATUS = do
+  let notAuthView = viewAuthStatus NotAuthenticated
+      authingView = viewAuthStatus Authenticating
+      authedView = viewAuthStatus (Authenticated "abc-def-ghi-jkl-mno")
+  putStrLn "  PASS: REQ_VIEW_AUTH_STATUS"
+  pure True
+
+-- | SPEC: REQ_UPDATE_AUTH_LOGIN_REQUEST - LoginRequest sets Authenticating state
+test_REQ_UPDATE_AUTH_LOGIN_REQUEST : IO Bool
+test_REQ_UPDATE_AUTH_LOGIN_REQUEST = do
+  let m = update LoginRequest initialModel
+  assertEq "LoginRequest sets Authenticating" Authenticating m.authState
+
+-- | SPEC: REQ_UPDATE_AUTH_LOGIN_SUCCESS - LoginSuccess sets Authenticated state with principal
+test_REQ_UPDATE_AUTH_LOGIN_SUCCESS : IO Bool
+test_REQ_UPDATE_AUTH_LOGIN_SUCCESS = do
+  let m = update (LoginSuccess "test-principal") initialModel
+  assertEq "LoginSuccess sets Authenticated" (Authenticated "test-principal") m.authState
+
+-- | SPEC: REQ_UPDATE_AUTH_LOGIN_FAILURE - LoginFailure resets to NotAuthenticated state
+test_REQ_UPDATE_AUTH_LOGIN_FAILURE : IO Bool
+test_REQ_UPDATE_AUTH_LOGIN_FAILURE = do
+  let m0 = { authState := Authenticating } initialModel
+      m = update LoginFailure m0
+  assertEq "LoginFailure resets to NotAuthenticated" NotAuthenticated m.authState
+
+-- | SPEC: REQ_UPDATE_AUTH_LOGOUT_REQUEST - LogoutRequest triggers logout flow
+test_REQ_UPDATE_AUTH_LOGOUT_REQUEST : IO Bool
+test_REQ_UPDATE_AUTH_LOGOUT_REQUEST = do
+  let m0 = { authState := Authenticated "test" } initialModel
+      m = update LogoutRequest m0
+  assertEq "LogoutRequest sets Authenticating" Authenticating m.authState
+
+-- | SPEC: REQ_UPDATE_AUTH_LOGOUT_COMPLETE - LogoutComplete resets to NotAuthenticated state
+test_REQ_UPDATE_AUTH_LOGOUT_COMPLETE : IO Bool
+test_REQ_UPDATE_AUTH_LOGOUT_COMPLETE = do
+  let m0 = { authState := Authenticating } initialModel
+      m = update LogoutComplete m0
+  assertEq "LogoutComplete resets to NotAuthenticated" NotAuthenticated m.authState
+
+-- | Test AuthState == operator
+test_BRANCH_AuthState_Eq : IO Bool
+test_BRANCH_AuthState_Eq = do
+  r1 <- assertTrue "NotAuthenticated == NotAuthenticated" (NotAuthenticated == NotAuthenticated)
+  r2 <- assertTrue "Authenticating == Authenticating" (Authenticating == Authenticating)
+  r3 <- assertTrue "Authenticated x == Authenticated x" (Authenticated "x" == Authenticated "x")
+  r4 <- assertTrue "Authenticated a /== Authenticated b" (not (Authenticated "a" == Authenticated "b"))
+  r5 <- assertTrue "NotAuthenticated /== Authenticating" (not (NotAuthenticated == Authenticating))
+  r6 <- assertTrue "Authenticating /== Authenticated x" (not (Authenticating == Authenticated "x"))
+  pure (r1 && r2 && r3 && r4 && r5 && r6)
 
 -- =============================================================================
 -- Test Runner
@@ -743,12 +820,23 @@ runAllTests = do
   r53 <- test_BRANCH_Update_AllMsgs
   r54 <- test_BRANCH_Eq_CrossConstructors
   putStrLn ""
+  putStrLn "-- Auth Tests --"
+  r55 <- test_REQ_MODEL_AUTH
+  r56 <- test_REQ_VIEW_AUTH_STATUS
+  r57 <- test_REQ_UPDATE_AUTH_LOGIN_REQUEST
+  r58 <- test_REQ_UPDATE_AUTH_LOGIN_SUCCESS
+  r59 <- test_REQ_UPDATE_AUTH_LOGIN_FAILURE
+  r60 <- test_REQ_UPDATE_AUTH_LOGOUT_REQUEST
+  r61 <- test_REQ_UPDATE_AUTH_LOGOUT_COMPLETE
+  r62 <- test_BRANCH_AuthState_Eq
+  putStrLn ""
   let allResults = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10,
                     r11, r12, r13, r14, r15, r16, r17, r18, r19, r20,
                     r21, r22, r23, r24, r25, r26, r27, r28, r29, r30,
                     r31, r32, r33, r34, r35, r36, r37, r38, r39, r40,
                     r41, r42, r43, r44, r45, r46, r47, r48, r49, r50,
-                    r51, r52, r53, r54]
+                    r51, r52, r53, r54, r55, r56, r57, r58, r59, r60,
+                    r61, r62]
   printResults allResults
   where
     printResults : List Bool -> IO ()

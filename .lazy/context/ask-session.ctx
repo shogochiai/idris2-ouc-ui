@@ -21,3 +21,15 @@ GapDetected(REQ_VIEW_PROPOSAL_LIST, stparity)|signal-record|0
 GapDetected(REQ_VIEW_EVENT_LOG, stparity)|signal-record|0
 GapDetected(REQ_VIEW_LOADING, stparity)|signal-record|0
 GapDetected(REQ_VIEW_ERROR, stparity)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0
+GapDetected(semantic:uncovered:project, testandcoverage)|signal-record|0

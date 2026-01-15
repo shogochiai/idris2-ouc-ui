@@ -202,3 +202,49 @@ id = "REQ_UPDATE_GOT_UPGRADE_EVENTS"
 description = "GotUpgradeEvents updates model with OU upgrade event history"
 priority = "could"
 tags = ["update", "upgrade"]
+
+# =============================================================================
+# Internet Identity Authentication (REQ_*_AUTH_*)
+# =============================================================================
+
+[[spec]]
+id = "REQ_MODEL_AUTH"
+description = "AuthState type has NotAuthenticated/Authenticating/Authenticated(principal)"
+priority = "should"
+tags = ["model", "auth"]
+
+[[spec]]
+id = "REQ_VIEW_AUTH_STATUS"
+description = "Display auth status with login/logout button and principal badge"
+priority = "should"
+tags = ["view", "auth"]
+
+[[spec]]
+id = "REQ_UPDATE_AUTH_LOGIN_REQUEST"
+description = "LoginRequest sets Authenticating state"
+priority = "should"
+tags = ["update", "auth"]
+
+[[spec]]
+id = "REQ_UPDATE_AUTH_LOGIN_SUCCESS"
+description = "LoginSuccess sets Authenticated state with principal"
+priority = "should"
+tags = ["update", "auth"]
+
+[[spec]]
+id = "REQ_UPDATE_AUTH_LOGIN_FAILURE"
+description = "LoginFailure resets to NotAuthenticated state"
+priority = "should"
+tags = ["update", "auth"]
+
+[[spec]]
+id = "REQ_UPDATE_AUTH_LOGOUT_REQUEST"
+description = "LogoutRequest triggers logout flow"
+priority = "should"
+tags = ["update", "auth"]
+
+[[spec]]
+id = "REQ_UPDATE_AUTH_LOGOUT_COMPLETE"
+description = "LogoutComplete resets to NotAuthenticated state"
+priority = "should"
+tags = ["update", "auth"]
