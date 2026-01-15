@@ -4,6 +4,7 @@ import Text.HTML
 import OucDashboard.Model
 import OucDashboard.Update
 import OucDashboard.View
+import OucDashboard.Indexer
 import Data.List
 
 %default covering
@@ -743,6 +744,34 @@ test_BRANCH_AuthState_Eq = do
   pure (r1 && r2 && r3 && r4 && r5 && r6)
 
 -- =============================================================================
+-- Indexer Integration Tests
+-- =============================================================================
+
+-- | SPEC: REQ_INDEXER_DASHBOARD_DATA - DashboardData record aggregates all fetched data
+test_REQ_INDEXER_DASHBOARD_DATA : IO Bool
+test_REQ_INDEXER_DASHBOARD_DATA = do
+  let auditors = [MkAuditor "a1" "Alice" ["0x1"]]
+      events = [MkEvent "now" "Test" Ethereum "data"]
+      sub = Just (MkSubscription Standard "2025-02-14" True)
+      t = Just (MkTreasury 1000 500 100)
+      dashData = MkDashboardData auditors events sub t
+  r1 <- assertEq "dashData auditors count" 1 (length dashData.auditors)
+  r2 <- assertEq "dashData events count" 1 (length dashData.events)
+  r3 <- assertTrue "dashData has subscription" (case dashData.subscription of Just _ => True; Nothing => False)
+  r4 <- assertTrue "dashData has treasury" (case dashData.treasury of Just _ => True; Nothing => False)
+  pure (r1 && r2 && r3 && r4)
+
+-- | SPEC: REQ_INDEXER_EMPTY_DATA - DashboardData handles empty responses
+test_REQ_INDEXER_EMPTY_DATA : IO Bool
+test_REQ_INDEXER_EMPTY_DATA = do
+  let dashData = MkDashboardData [] [] Nothing Nothing
+  r1 <- assertTrue "empty auditors" (null dashData.auditors)
+  r2 <- assertTrue "empty events" (null dashData.events)
+  r3 <- assertTrue "no subscription" (case dashData.subscription of Nothing => True; Just _ => False)
+  r4 <- assertTrue "no treasury" (case dashData.treasury of Nothing => True; Just _ => False)
+  pure (r1 && r2 && r3 && r4)
+
+-- =============================================================================
 -- Test Runner
 -- =============================================================================
 
@@ -830,13 +859,17 @@ runAllTests = do
   r61 <- test_REQ_UPDATE_AUTH_LOGOUT_COMPLETE
   r62 <- test_BRANCH_AuthState_Eq
   putStrLn ""
+  putStrLn "-- Indexer Tests --"
+  r63 <- test_REQ_INDEXER_DASHBOARD_DATA
+  r64 <- test_REQ_INDEXER_EMPTY_DATA
+  putStrLn ""
   let allResults = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10,
                     r11, r12, r13, r14, r15, r16, r17, r18, r19, r20,
                     r21, r22, r23, r24, r25, r26, r27, r28, r29, r30,
                     r31, r32, r33, r34, r35, r36, r37, r38, r39, r40,
                     r41, r42, r43, r44, r45, r46, r47, r48, r49, r50,
                     r51, r52, r53, r54, r55, r56, r57, r58, r59, r60,
-                    r61, r62]
+                    r61, r62, r63, r64]
   printResults allResults
   where
     printResults : List Bool -> IO ()

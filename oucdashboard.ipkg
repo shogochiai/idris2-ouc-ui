@@ -13,6 +13,7 @@ modules = OucDashboard.Main
         , OucDashboard.Update
         , OucDashboard.View
         , OucDashboard.Auth
+        , OucDashboard.Indexer
         , OucDashboard.Tests.AllTests
 
 main = OucDashboard.Main
