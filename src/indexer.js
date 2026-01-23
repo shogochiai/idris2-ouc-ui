@@ -1,18 +1,64 @@
-// ICP Indexer API Client
+// OUC Canister API Client
 // Called from Idris2 via FFI
+// Uses @dfinity/agent for Candid calls to OUC canister
 
-// Indexer canister ID (configurable via environment)
+import { Actor, HttpAgent } from "@dfinity/agent";
+
+// OUC Canister ID (configurable via environment)
+const OUC_CANISTER_ID = process.env.OUC_CANISTER_ID || "nrkou-hqaaa-aaaah-qq6qa-cai";
+
+// Legacy: Indexer HTTP API (for backwards compatibility)
 const INDEXER_CANISTER_ID = process.env.INDEXER_CANISTER_ID || "bkyz2-fmaaa-aaaaa-qaaaq-cai";
 
-// Build base URL for Indexer HTTP API
+// OUC Candid Interface (IDL)
+const oucIdlFactory = ({ IDL }) => {
+  return IDL.Service({
+    // Indexer Query Methods (CMD 30-33)
+    getOucEvents: IDL.Func([IDL.Nat], [IDL.Nat], ['query']),
+    getProposalEvents: IDL.Func([IDL.Nat], [IDL.Nat], ['query']),
+    getDashboardSummary: IDL.Func([], [IDL.Nat], ['query']),
+    storeTestEvent: IDL.Func([IDL.Nat, IDL.Nat], [IDL.Nat], []),
+    // Original Query Methods
+    getVersion: IDL.Func([], [IDL.Nat], ['query']),
+    getProposalCount: IDL.Func([], [IDL.Nat], ['query']),
+    getAuditorCount: IDL.Func([], [IDL.Nat], ['query']),
+  });
+};
+
+// Create agent and actor
+let agent = null;
+let oucActor = null;
+
+async function getOucActor() {
+  if (oucActor) return oucActor;
+
+  const isLocal = typeof process !== 'undefined' && process.env?.DFX_NETWORK !== "ic";
+  const host = isLocal ? "http://localhost:4943" : "https://ic0.app";
+
+  agent = new HttpAgent({ host });
+
+  // Fetch root key for local development
+  if (isLocal) {
+    await agent.fetchRootKey();
+  }
+
+  oucActor = Actor.createActor(oucIdlFactory, {
+    agent,
+    canisterId: OUC_CANISTER_ID,
+  });
+
+  return oucActor;
+}
+
+// Build base URL for Indexer HTTP API (legacy)
 function getBaseUrl() {
-  if (process.env.DFX_NETWORK === "ic") {
+  if (typeof process !== 'undefined' && process.env?.DFX_NETWORK === "ic") {
     return `https://${INDEXER_CANISTER_ID}.raw.ic0.app`;
   }
   return `http://${INDEXER_CANISTER_ID}.localhost:4943`;
 }
 
-// Generic fetch helper with error handling
+// Generic fetch helper with error handling (legacy HTTP API)
 async function fetchJson(path) {
   const url = `${getBaseUrl()}${path}`;
   try {
@@ -28,10 +74,68 @@ async function fetchJson(path) {
 }
 
 // =============================================================================
-// Event APIs
+// OUC Candid APIs (Direct canister calls)
 // =============================================================================
 
-// Fetch events with optional filters
+// Fetch OUC events count via Candid
+export async function fetchOucEventsCount(limit = 10) {
+  try {
+    const actor = await getOucActor();
+    const count = await actor.getOucEvents(BigInt(limit));
+    return { eventCount: Number(count) };
+  } catch (err) {
+    console.error("OUC getOucEvents error:", err);
+    throw err;
+  }
+}
+
+// Fetch proposal events count via Candid
+export async function fetchProposalEventsCount(proposalId) {
+  try {
+    const actor = await getOucActor();
+    const count = await actor.getProposalEvents(BigInt(proposalId));
+    return { eventCount: Number(count) };
+  } catch (err) {
+    console.error("OUC getProposalEvents error:", err);
+    throw err;
+  }
+}
+
+// Fetch dashboard summary via Candid
+export async function fetchDashboardSummaryFromOuc() {
+  try {
+    const actor = await getOucActor();
+    const totalEvents = await actor.getDashboardSummary();
+    const proposalCount = await actor.getProposalCount();
+    const auditorCount = await actor.getAuditorCount();
+    return {
+      totalEventCount: Number(totalEvents),
+      proposalCount: Number(proposalCount),
+      auditorCount: Number(auditorCount)
+    };
+  } catch (err) {
+    console.error("OUC getDashboardSummary error:", err);
+    throw err;
+  }
+}
+
+// Store test event via Candid (for testing)
+export async function storeTestEvent(blockNumber, eventType) {
+  try {
+    const actor = await getOucActor();
+    const newCount = await actor.storeTestEvent(BigInt(blockNumber), BigInt(eventType));
+    return { newEventCount: Number(newCount) };
+  } catch (err) {
+    console.error("OUC storeTestEvent error:", err);
+    throw err;
+  }
+}
+
+// =============================================================================
+// Legacy Event APIs (HTTP to Indexer)
+// =============================================================================
+
+// Fetch events with optional filters (legacy HTTP)
 export async function fetchEvents(params = {}) {
   const query = new URLSearchParams();
   if (params.contract) query.set("contract", params.contract);
@@ -47,17 +151,17 @@ export async function fetchEvents(params = {}) {
   return await fetchJson(path);
 }
 
-// Fetch single event by ID
+// Fetch single event by ID (legacy HTTP)
 export async function fetchEventById(eventId) {
   return await fetchJson(`/events/${eventId}`);
 }
 
-// Fetch indexer stats
+// Fetch indexer stats (legacy HTTP)
 export async function fetchStats() {
   return await fetchJson("/stats");
 }
 
-// Fetch health status
+// Fetch health status (legacy HTTP)
 export async function fetchHealth() {
   return await fetchJson("/health");
 }
@@ -218,7 +322,12 @@ export function isPolling() {
 
 if (typeof window !== 'undefined') {
   window.oucIndexer = {
-    // Query APIs
+    // OUC Candid APIs (new)
+    fetchOucEventsCount,
+    fetchProposalEventsCount,
+    fetchDashboardSummaryFromOuc,
+    storeTestEvent,
+    // Legacy Query APIs (HTTP)
     fetchEvents,
     fetchEventById,
     fetchStats,
