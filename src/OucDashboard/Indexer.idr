@@ -1,7 +1,9 @@
 module OucDashboard.Indexer
 
 import JS
+import Web.MVC.Cmd
 import OucDashboard.Model
+import OucDashboard.Update
 
 %default covering
 
@@ -206,3 +208,44 @@ fetchDashboardData callback = do
         let subscription = parseSubscription (prim__getField result "subscription")
         let treasury = parseTreasury (prim__getField result "treasury")
         callback (MkDashboardData auditors events subscription treasury)
+
+-- =============================================================================
+-- Cmd-based API for MVC integration
+-- =============================================================================
+
+-- FFI for async fetch that takes JSIO callback
+%foreign "javascript:lambda:(cb) => { console.log('fetchDataCmd: starting'); if(window.oucIndexer) { window.oucIndexer.fetchDashboardData().then(data => { console.log('fetchDataCmd: got data', data); cb(data)(); }).catch(e => console.error('fetchDataCmd error:', e)); } else { console.warn('oucIndexer not available'); } }"
+prim__fetchDashboardDataAsync : (AnyPtr -> PrimIO ()) -> PrimIO ()
+
+||| Fetch all dashboard data and return as Cmd Msg
+export
+fetchDataCmd : Cmd Msg
+fetchDataCmd = C $ \handler => do
+  liftIO $ putStrLn "fetchDataCmd: executing"
+  primJS $ prim__fetchDashboardDataAsync $ \result => toPrim $ do
+    putStrLn "fetchDataCmd: parsing result"
+    let auditors = parseAuditors (prim__getField result "auditors")
+    putStrLn "fetchDataCmd: auditors parsed"
+    -- Events: result.events is { events: [] }, just use empty list for now
+    let events : List Event = []
+    putStrLn "fetchDataCmd: events set to empty"
+    let subscription = parseSubscription (prim__getField result "subscription")
+    putStrLn "fetchDataCmd: subscription parsed"
+    let treasury = parseTreasury (prim__getField result "treasury")
+    putStrLn "fetchDataCmd: treasury parsed"
+    -- Fire messages - we need to run JSIO in IO context
+    putStrLn "fetchDataCmd: firing GotAuditors"
+    _ <- runEitherT (handler (GotAuditors auditors))
+    putStrLn "fetchDataCmd: firing GotEvents"
+    _ <- runEitherT (handler (GotEvents events))
+    case subscription of
+      Just sub => do
+        putStrLn "fetchDataCmd: firing GotSubscription"
+        ignore $ runEitherT (handler (GotSubscription sub))
+      Nothing => putStrLn "fetchDataCmd: no subscription"
+    case treasury of
+      Just t => do
+        putStrLn "fetchDataCmd: firing GotTreasury"
+        ignore $ runEitherT (handler (GotTreasury t))
+      Nothing => putStrLn "fetchDataCmd: no treasury"
+    putStrLn "fetchDataCmd: done"

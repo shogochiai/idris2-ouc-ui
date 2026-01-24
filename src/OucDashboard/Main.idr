@@ -6,14 +6,19 @@ import OucDashboard.Model
 import OucDashboard.Update
 import OucDashboard.View
 import OucDashboard.Auth
--- OucDashboard.Indexer provides FFI bindings for window.oucIndexer
+import OucDashboard.Indexer
 
 %default covering
 
-||| Display function: renders view
-||| Note: Actual data fetching will be done via JavaScript callbacks
+||| Display function: renders view and handles data fetching
 display : Msg -> Model -> Cmd Msg
-display _ model = child Body (view model)
+display msg model =
+  case msg of
+    -- On Init or Refresh, fetch data from OUC Canister
+    Init    => batch [child Body (view model), fetchDataCmd]
+    Refresh => batch [child Body (view model), fetchDataCmd]
+    -- For other messages, just render
+    _       => child Body (view model)
 
 ||| Error handler
 onError : JSErr -> IO ()

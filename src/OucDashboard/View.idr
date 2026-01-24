@@ -1,6 +1,7 @@
 module OucDashboard.View
 
 import Text.HTML
+import Text.CSS.Class
 import OucDashboard.Model
 import OucDashboard.Update
 
@@ -11,28 +12,28 @@ import OucDashboard.Update
 -- =============================================================================
 
 ||| Status badge CSS class
-statusClass : OUStatus -> String
+statusClass : OUStatus -> Class
 statusClass Active  = "badge badge-success"
 statusClass Syncing = "badge badge-warning"
 statusClass Stale   = "badge badge-secondary"
 statusClass Error   = "badge badge-danger"
 
 ||| Proposal status badge CSS class
-proposalStatusClass : ProposalStatus -> String
+proposalStatusClass : ProposalStatus -> Class
 proposalStatusClass Pending  = "badge badge-info"
 proposalStatusClass Approved = "badge badge-success"
 proposalStatusClass Rejected = "badge badge-danger"
 proposalStatusClass Executed = "badge badge-primary"
 
 ||| Tier badge CSS class
-tierClass : Tier -> String
+tierClass : Tier -> Class
 tierClass Archive  = "badge badge-secondary"
 tierClass Economy  = "badge badge-info"
 tierClass Standard = "badge badge-primary"
 tierClass RealTime = "badge badge-success"
 
 ||| Upgrade status badge CSS class
-upgradeStatusClass : UpgradeStatus -> String
+upgradeStatusClass : UpgradeStatus -> Class
 upgradeStatusClass UpgradeProposed = "badge badge-info"
 upgradeStatusClass UpgradeApproved = "badge badge-success"
 upgradeStatusClass UpgradeRejected = "badge badge-danger"
@@ -45,7 +46,7 @@ upgradeStatusClass UpgradeExecuted = "badge badge-primary"
 ||| Tab button
 tabButton : Tab -> Tab -> Node Msg
 tabButton activeTab tab =
-  let cls = if activeTab == tab then "tab-btn active" else "tab-btn"
+  let cls : Class = if activeTab == tab then "tab-btn active" else "tab-btn"
   in button [onClick (SwitchTab tab), class cls] [Text (show tab)]
 
 ||| Tab navigation bar
@@ -208,7 +209,7 @@ viewEvents evts =
 tierOptionButton : Tier -> Tier -> Node Msg
 tierOptionButton currentTier tier =
   let isActive = currentTier == tier
-      btnClass = if isActive then "tier-btn active" else "tier-btn"
+      btnClass : Class = if isActive then "tier-btn active" else "tier-btn"
   in button [onClick (RequestTierChange tier), class btnClass]
        [ span [class (tierClass tier)] [Text (show tier)]
        , span [class "tier-freq"] [Text (tierSyncFreq tier)]

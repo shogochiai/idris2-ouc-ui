@@ -41,16 +41,21 @@ function isMainnet() {
 }
 
 async function getOucActor() {
+  // For local development, always create fresh actor to handle dfx restarts
+  if (!isMainnet()) {
+    const host = "http://localhost:4943";
+    const freshAgent = new HttpAgent({ host });
+    await freshAgent.fetchRootKey().catch(e => console.warn("fetchRootKey failed:", e));
+    return Actor.createActor(oucIdlFactory, {
+      agent: freshAgent,
+      canisterId: OUC_CANISTER_ID,
+    });
+  }
+
+  // For mainnet, cache the actor
   if (oucActor) return oucActor;
 
-  const host = isMainnet() ? "https://ic0.app" : "http://localhost:4943";
-
-  agent = new HttpAgent({ host });
-
-  // Fetch root key for local development
-  if (!isMainnet()) {
-    await agent.fetchRootKey();
-  }
+  agent = new HttpAgent({ host: "https://ic0.app" });
 
   oucActor = Actor.createActor(oucIdlFactory, {
     agent,
@@ -277,7 +282,8 @@ export async function setAutoRenew(enabled) {
 export async function fetchDashboardData() {
   const results = await Promise.allSettled([
     fetchAuditors(),
-    fetchEvents({ limit: 50 }),
+    // Skip fetchEvents - legacy HTTP API not available, use empty array
+    Promise.resolve({ events: [] }),
     fetchSubscription(),
     fetchTreasury(),
     fetchOucStatus()
