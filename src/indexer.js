@@ -4,15 +4,21 @@
 
 import { Actor, HttpAgent } from "@dfinity/agent";
 
-// OUC Canister ID (configurable via environment)
-const OUC_CANISTER_ID = process.env.OUC_CANISTER_ID || "nrkou-hqaaa-aaaah-qq6qa-cai";
+// OUC Canister ID (local: lqy7q-dh777-77777-aaaaq-cai, IC mainnet: nrkou-hqaaa-aaaah-qq6qa-cai)
+const OUC_CANISTER_ID = typeof window !== 'undefined' && window.OUC_CANISTER_ID
+  ? window.OUC_CANISTER_ID
+  : "lqy7q-dh777-77777-aaaaq-cai";  // Default to local
 
 // Legacy: Indexer HTTP API (for backwards compatibility)
-const INDEXER_CANISTER_ID = process.env.INDEXER_CANISTER_ID || "bkyz2-fmaaa-aaaaa-qaaaq-cai";
+const INDEXER_CANISTER_ID = "bkyz2-fmaaa-aaaaa-qaaaq-cai";
 
 // OUC Candid Interface (IDL)
 const oucIdlFactory = ({ IDL }) => {
   return IDL.Service({
+    // Indexer Integration (5.3.1) - returns JSON text
+    getAuditors: IDL.Func([], [IDL.Text], ['query']),
+    getSubscription: IDL.Func([], [IDL.Text], ['query']),
+    getTreasury: IDL.Func([], [IDL.Text], ['query']),
     // Indexer Query Methods (CMD 30-33)
     getOucEvents: IDL.Func([IDL.Nat], [IDL.Nat], ['query']),
     getProposalEvents: IDL.Func([IDL.Nat], [IDL.Nat], ['query']),
@@ -29,16 +35,20 @@ const oucIdlFactory = ({ IDL }) => {
 let agent = null;
 let oucActor = null;
 
+// Detect if running on IC mainnet or local
+function isMainnet() {
+  return typeof window !== 'undefined' && window.location?.hostname?.endsWith('.ic0.app');
+}
+
 async function getOucActor() {
   if (oucActor) return oucActor;
 
-  const isLocal = typeof process !== 'undefined' && process.env?.DFX_NETWORK !== "ic";
-  const host = isLocal ? "http://localhost:4943" : "https://ic0.app";
+  const host = isMainnet() ? "https://ic0.app" : "http://localhost:4943";
 
   agent = new HttpAgent({ host });
 
   // Fetch root key for local development
-  if (isLocal) {
+  if (!isMainnet()) {
     await agent.fetchRootKey();
   }
 
@@ -52,7 +62,7 @@ async function getOucActor() {
 
 // Build base URL for Indexer HTTP API (legacy)
 function getBaseUrl() {
-  if (typeof process !== 'undefined' && process.env?.DFX_NETWORK === "ic") {
+  if (isMainnet()) {
     return `https://${INDEXER_CANISTER_ID}.raw.ic0.app`;
   }
   return `http://${INDEXER_CANISTER_ID}.localhost:4943`;
@@ -170,29 +180,51 @@ export async function fetchHealth() {
 // OUC APIs (synced from OUC Canister)
 // =============================================================================
 
-// Fetch all auditors
+// Fetch all auditors from OUC Canister via Candid
 export async function fetchAuditors() {
-  return await fetchJson("/auditors");
+  try {
+    const actor = await getOucActor();
+    const jsonText = await actor.getAuditors();
+    return JSON.parse(jsonText);
+  } catch (err) {
+    console.error("OUC getAuditors error:", err);
+    return [];
+  }
 }
 
-// Fetch single auditor by ID
+// Fetch single auditor by ID (filter from list)
 export async function fetchAuditorById(auditorId) {
-  return await fetchJson(`/auditors/${auditorId}`);
+  const auditors = await fetchAuditors();
+  return auditors.find(a => a.auditorId === auditorId) || null;
 }
 
-// Fetch subscription info
+// Fetch subscription info from OUC Canister via Candid
 export async function fetchSubscription() {
-  return await fetchJson("/subscription");
+  try {
+    const actor = await getOucActor();
+    const jsonText = await actor.getSubscription();
+    return JSON.parse(jsonText);
+  } catch (err) {
+    console.error("OUC getSubscription error:", err);
+    return null;
+  }
 }
 
-// Fetch treasury balances
+// Fetch treasury balances from OUC Canister via Candid
 export async function fetchTreasury() {
-  return await fetchJson("/treasury");
+  try {
+    const actor = await getOucActor();
+    const jsonText = await actor.getTreasury();
+    return JSON.parse(jsonText);
+  } catch (err) {
+    console.error("OUC getTreasury error:", err);
+    return null;
+  }
 }
 
-// Fetch OUC sync status
+// Fetch OUC sync status (placeholder)
 export async function fetchOucStatus() {
-  return await fetchJson("/ouc/status");
+  return { status: "ok", lastSync: new Date().toISOString() };
 }
 
 // =============================================================================
